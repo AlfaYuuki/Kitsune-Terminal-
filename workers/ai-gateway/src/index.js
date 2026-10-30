@@ -1,6 +1,6 @@
 const ALLOWED_ORIGIN = "https://alfayuuki.github.io";
 const MODEL = "gemini-flash-latest";
-const UPSTREAM_TIMEOUT_MS = 40000;
+const UPSTREAM_TIMEOUT_MS = 25000;
 const SCHEMA = { type:"OBJECT", properties:{
  title:{type:"STRING"}, domain:{type:"STRING"}, environment:{type:"STRING"}, summary:{type:"STRING"},
  subsystems:{type:"ARRAY",items:{type:"STRING"}}, phases:{type:"ARRAY",items:{type:"STRING"}},
@@ -19,6 +19,7 @@ export default { async fetch(request,env) {
  if(!prompt||prompt.length>420)return reply({error:"Prompt must contain 1–420 characters."},400);
  const local=body.localModel&&typeof body.localModel==="object"?body.localModel:{};
  const instruction="You are the independent AI model designer inside KITSUNE TERMINAL. Design a fictional educational simulation blueprint only. Never provide real-world intrusion, targeting, access, control, or operation instructions. Do not use tools or access external systems. Return JSON matching the schema. Domain must be cyber, aerospace, engineering, science, environment, city, or general. Cyber must be defensive and isolated. Limit arrays to 8 subsystems, 8 phases, 6 assumptions, 6 risks. State uncertainty honestly.\nSCENARIO: "+prompt+"\nLOCAL ENGINE MODEL: "+JSON.stringify(local);
+ const startedAt=Date.now();
  const controller=new AbortController();
  const timeout=setTimeout(()=>controller.abort(),UPSTREAM_TIMEOUT_MS);
  try {
@@ -43,7 +44,10 @@ export default { async fetch(request,env) {
   let blueprint;try{blueprint=JSON.parse(raw)}catch{return reply({error:"Gemini returned invalid JSON."},502)}
   return reply({blueprint,provider:"Gemini",model:MODEL});
  }catch(error){
-  if(error?.name==="AbortError")return reply({error:"Gemini upstream timed out after 40 seconds. Check Worker logs and Gemini API availability."},504);
+  if(error?.name==="AbortError"){
+   console.warn("Gemini upstream timed out",{model:MODEL,timeoutMs:UPSTREAM_TIMEOUT_MS,elapsedMs:Date.now()-startedAt});
+   return reply({error:"Gemini upstream timed out after 25 seconds. Check Worker logs and Gemini API availability.",model:MODEL},504);
+  }
   console.error("Gemini gateway network failure",{message:String(error?.message||"network error").slice(0,160),model:MODEL});
   return reply({error:"Unable to reach Gemini. Check Worker logs and Gemini API availability."},502);
  }finally{clearTimeout(timeout)}
