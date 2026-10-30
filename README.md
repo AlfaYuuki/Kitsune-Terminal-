@@ -16,7 +16,24 @@ The project is a static ES-module web app and can be hosted with GitHub Pages. O
 - `src/core/runtime.js` — scenario lifecycle, evolving node states, telemetry, and live parameter tuning.
 - `src/visual/` — world, topology, HUD, and chart rendering.
 - `src/simulations/` — domain extension points.
-- `src/generators/ai-adapter.js` — optional server-side AI integration boundary. It is intentionally not configured in the static client; never put provider secrets in browser code.
+- `src/generators/ai-adapter.js` — browser-safe client adapter that calls the optional secure gateway and validates the independent AI blueprint.
+- `src/config/ai.js` — public gateway URL configuration only; never place credentials here.
+- `workers/ai-gateway/src/index.js` — Cloudflare Worker gateway. It stores the Gemini credential as a server-side secret, validates prompts, requests structured JSON, and returns a bounded blueprint.
+- `workers/ai-gateway/wrangler.toml` — Worker deployment configuration.
+
+## Dual Engine Mode
+
+KITSUNE always builds the local procedural model first. When the secure AI gateway is configured, Gemini independently designs a second blueprint; the Dual Engine Comparison panel displays both interpretations side by side. Gemini does not control real systems or replace the local runtime. If the gateway is not configured, offline, times out, or returns an error, the local simulation continues without interruption.
+
+### Configure the optional gateway
+
+1. Deploy `workers/ai-gateway` as a Cloudflare Worker named `kitsune-terminal-ai-gateway`.
+2. Add a Worker **Secret** named `GEMINI_API_KEY` in the Cloudflare Worker settings. Do not put the key in this repository, `wrangler.toml`, or browser files. Cloudflare documents encrypted Worker secrets at https://developers.cloudflare.com/workers/configuration/secrets/.
+3. Set the Worker route/domain to the deployed Worker URL. The gateway accepts the `/generate` endpoint and only allows the configured GitHub Pages origin.
+4. Set `AI_GATEWAY_URL` in `src/config/ai.js` to the Worker base URL (without `/generate`), then commit and redeploy GitHub Pages.
+5. Test with a harmless fictional prompt. Without the gateway URL or server secret, the local engine remains available.
+
+The gateway uses Gemini's `generateContent` endpoint and requests JSON output. See https://ai.google.dev/api/generate-content. Before enabling public use, configure usage limits and request-rate protections on the gateway/provider account. Do not expose the Worker secret or paste API keys into chat. Account setup, API billing, and secret configuration should be handled with a trusted adult.
 
 ## Runtime controls
 
