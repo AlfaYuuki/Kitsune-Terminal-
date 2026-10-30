@@ -22,7 +22,7 @@ export function isAIConfigured() {
 export async function generateWithAI(request, options = {}) {
   if (!isAIConfigured()) throw new Error("AI gateway URL is not configured.");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeout || 25000);
+  const timeout = setTimeout(() => controller.abort(), options.timeout || 50000);
   try {
     const response = await fetch(AI_GATEWAY_URL.replace(/\/$/, "") + "/generate", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -33,7 +33,7 @@ export async function generateWithAI(request, options = {}) {
     if (!response.ok) throw new Error(payload.error || "AI gateway request failed (" + response.status + ").");
     return validateBlueprint(payload.blueprint);
   } catch (error) {
-    if (error.name === "AbortError") throw new Error("AI request timed out.");
+    if (error.name === "AbortError") throw new Error("Browser timed out waiting for the AI gateway after 50 seconds.");
     throw error;
   } finally { clearTimeout(timeout); }
 }
