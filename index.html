@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080d12">
-  <title>KITSUNE TERMINAL</title>
+  <meta name="description" content="Kitsune Terminal — a fictional, offline-ready simulation environment.">
+  <title>KITSUNE TERMINAL — Simulation Environment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/themes/terminal.css">
 </head>
 <body>
-  <main>
-    <h1>KITSUNE TERMINAL</h1>
-    <p>Universal simulation environment — prototype entry point.</p>
-  </main>
+  <div class="ambient-grid"></div>
+  <main id="app" class="app-shell"><div class="boot">INITIALIZING KITSUNE CORE…</div></main>
   <script type="module" src="./src/interface/dashboard.js"></script>
 </body>
 </html>
