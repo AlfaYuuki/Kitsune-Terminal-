@@ -4,6 +4,7 @@ import { updateHUD } from "../visual/hud.js";
 import { renderNetwork } from "../visual/network.js";
 import { applyWorldTheme, renderWorld } from "../visual/world.js";
 import { renderMetrics } from "../visual/charts.js";
+import { generateWithAI, isAIConfigured } from "../generators/ai-adapter.js";
 
 export function initializeTerminal() {
  const root=document.querySelector("#app");if(!root)return;
@@ -22,6 +23,7 @@ export function initializeTerminal() {
     <article class="instrument topology-panel"><div class="instrument-head"><span><b>03</b> NETWORK TOPOLOGY</span><span>ABSTRACT / FICTIONAL</span></div><canvas id="network-canvas" height="190"></canvas></article>
     <article class="instrument signal-panel"><div class="instrument-head"><span><b>04</b> MODEL SIGNAL</span><span>INDEX / 0—100</span></div><canvas id="metrics-canvas" height="150"></canvas><div class="signal-legend"><span>◆ SYSTEM LOAD</span><span>— LIVE SAMPLE</span></div></article>
    </section>
+   <section id="ai-comparison" class="ai-comparison" hidden><div class="instrument-head"><span><b>05</b> DUAL ENGINE COMPARISON</span><span id="ai-state">AI MODEL PENDING</span></div><div class="ai-columns"><article><div class="ai-model-label">LOCAL / PROCEDURAL</div><h3 id="local-model-title">Awaiting local model</h3><p id="local-model-summary">The procedural engine builds this model offline.</p><div class="ai-model-label">SUBSYSTEMS</div><ul id="local-model-nodes"></ul><div class="ai-model-label">PHASES</div><ul id="local-model-phases"></ul></article><article><div class="ai-model-label">REMOTE / GEMINI</div><h3 id="ai-model-title">Waiting for AI</h3><p id="ai-model-summary">The independent AI model will appear here.</p><div class="ai-model-label">SUBSYSTEMS</div><ul id="ai-model-nodes"></ul><div class="ai-model-label">PHASES</div><ul id="ai-model-phases"></ul><div class="ai-model-label">ASSUMPTIONS & RISKS</div><ul id="ai-model-notes"></ul></article></div></section>
    <div class="command-disclaimer">KITSUNE OUTPUT IS FICTIONAL · NO EXTERNAL SYSTEMS ARE ACCESSED · NO REAL NETWORK OPERATIONS</div>
   </main>
  </div>
@@ -31,6 +33,7 @@ export function initializeTerminal() {
  const main=root.querySelector(".command-main");
  root.querySelectorAll("[data-view]").forEach(tab=>tab.addEventListener("click",()=>{const view=tab.dataset.view;main.dataset.view=view;root.querySelectorAll("[data-view]").forEach(item=>{const active=item===tab;item.classList.toggle("active",item.dataset.view===view);item.setAttribute("aria-current",active?"page":"false")});if(activeScenario){if(view==="world")renderWorld(root.querySelector("#world-canvas"),activeScenario);if(view==="telemetry")renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,runtime.getState().progress)}}));
  let activeScenario=null;
+ let requestSequence=0;
  const runtime=createRuntime({onUpdate:state=>{updateHUD(state,root);if(activeScenario)renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,state.progress)},onEvent:event=>{appendLog(event);root.querySelector("#phase-label").textContent=event.phase||"RUNNING";if(activeScenario)renderNetwork(root.querySelector("#network-canvas"),activeScenario.nodes)},onComplete:()=>{status.textContent="COMPLETE";root.querySelector("#stream-state").textContent="SEQUENCE COMPLETE";appendLog({level:"SUCCESS",message:"Scenario sequence completed. Virtual environment remains isolated."})}});
  function appendLog(event){
   const line=document.createElement("div");line.className="log-line";
@@ -41,7 +44,7 @@ export function initializeTerminal() {
  }
  function execute(prompt){
   try{
-   const request=parseRequest(prompt);logs.replaceChildren();status.textContent="INITIALIZING";root.querySelector("#stream-state").textContent="BUILDING MODEL";
+   const request=parseRequest(prompt);const sequence=++requestSequence;logs.replaceChildren();status.textContent="INITIALIZING";root.querySelector("#stream-state").textContent="BUILDING MODEL";
    const scenario=runtime.run(request);activeScenario=scenario;
    root.querySelector("#scenario-title").innerHTML="Scenario <em>active</em>";
    root.querySelector("#scenario-subtitle").textContent=scenario.title+" · "+scenario.environment;
@@ -51,6 +54,19 @@ export function initializeTerminal() {
    applyWorldTheme(scenario.domain);renderWorld(root.querySelector("#world-canvas"),scenario);
    renderNetwork(root.querySelector("#network-canvas"),scenario.nodes);renderMetrics(root.querySelector("#metrics-canvas"),scenario,0);
    root.querySelector("#phase-label").textContent="INITIALIZATION";appendLog({level:"SYSTEM",message:"Scenario accepted · domain="+scenario.domain+" · confidence="+Math.round(scenario.confidence*100)+"%"});
+   const compare=root.querySelector("#ai-comparison");compare.hidden=false;
+   root.querySelector("#local-model-title").textContent=scenario.title;
+   root.querySelector("#local-model-summary").textContent=scenario.environment+" · "+scenario.nodes.length+" virtual nodes · "+scenario.events.length+" scheduled events · confidence "+Math.round(scenario.confidence*100)+"%";
+   const fillList=(id,items)=>{const list=root.querySelector("#"+id);list.replaceChildren();items.forEach(value=>{const li=document.createElement("li");li.textContent=value;list.append(li)})};
+   fillList("local-model-nodes",scenario.nodes.map(n=>n.label));fillList("local-model-phases",scenario.phases);
+   fillList("ai-model-nodes",["Awaiting AI blueprint"]);fillList("ai-model-phases",["Awaiting AI blueprint"]);fillList("ai-model-notes",[]);
+   root.querySelector("#ai-model-title").textContent="Waiting for AI";root.querySelector("#ai-model-summary").textContent="Independent model generation pending.";
+   root.querySelector("#ai-state").textContent=isAIConfigured()?"GEMINI CONNECTING":"AI GATEWAY NOT CONFIGURED";
+   if(isAIConfigured()){
+    root.querySelector("#core-state").textContent="DUAL ENGINE";
+    generateWithAI(request).then(blueprint=>{if(sequence!==requestSequence)return;root.querySelector("#ai-model-title").textContent=blueprint.title+" · "+blueprint.domain.toUpperCase();root.querySelector("#ai-model-summary").textContent=blueprint.environment+" · "+blueprint.summary+" · confidence "+blueprint.confidence+"%";fillList("ai-model-nodes",blueprint.subsystems);fillList("ai-model-phases",blueprint.phases);fillList("ai-model-notes",[...blueprint.assumptions.map(x=>"ASSUMPTION · "+x),...blueprint.risks.map(x=>"RISK · "+x)]);root.querySelector("#ai-state").textContent="GEMINI MODEL RECEIVED";appendLog({level:"SUCCESS",message:"Independent Gemini model received. Local and AI blueprints are ready for comparison."})}).catch(error=>{if(sequence!==requestSequence)return;root.querySelector("#ai-state").textContent="LOCAL FALLBACK ACTIVE";root.querySelector("#ai-model-title").textContent="AI unavailable";root.querySelector("#ai-model-summary").textContent=error.message+" The procedural model continues normally.";appendLog({level:"WARN",message:"AI adapter unavailable · "+error.message+" · continuing with local procedural engine"})});
+   }else{root.querySelector("#ai-model-title").textContent="Gateway not configured";root.querySelector("#ai-model-summary").textContent="Deploy the secure Worker and set its public gateway URL in src/config/ai.js. The local engine is fully operational.";}
+
    appendLog({level:"TRACE",message:"Virtual instance "+scenario.id+" allocated in local sandbox"});
    appendLog({level:"INFO",message:"Environment: "+scenario.environment});
   }catch(error){appendLog({level:"ERROR",message:error.message});status.textContent="INPUT ERROR"}
@@ -62,5 +78,5 @@ export function initializeTerminal() {
  root.querySelector("#run-speed").addEventListener("change",event=>runtime.setSpeed(event.target.value));
  root.querySelector("#intensity").addEventListener("input",event=>{const value=Number(event.target.value);root.querySelector("#intensity-value").textContent=value;runtime.setParameter("intensity",value)});
  root.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListener("click",()=>{input.value=button.dataset.prompt;execute(input.value)}));
- root.querySelector("#clear-session").addEventListener("click",()=>{runtime.reset();root.querySelector("#pause-run").textContent="Ⅱ PAUSE";root.querySelector("#phase-label").textContent="STANDBY";activeScenario=null;logs.replaceChildren();status.textContent="IDLE";root.querySelector("#stream-state").textContent="AWAITING INPUT";root.querySelector("#scenario-title").innerHTML="Awaiting <em>input</em>";root.querySelector("#scenario-subtitle").textContent="Describe any fictional system, mission, experiment or environment.";root.querySelector("#sim-id").textContent="NO SESSION";root.querySelector("#world-label").textContent="NO WORLD LOADED";root.querySelector("#core-state").textContent="CORE ONLINE";root.querySelector("#nodes").textContent="No active processes";root.querySelector("#metric-progress").textContent="0%";root.querySelector("#metric-throughput").textContent="0 ops";root.querySelector("#metric-events").textContent="0";root.querySelector("#progress-fill").style.width="0%";});
+ root.querySelector("#clear-session").addEventListener("click",()=>{requestSequence++;runtime.reset();root.querySelector("#ai-comparison").hidden=true;root.querySelector("#ai-state").textContent="AI MODEL PENDING";root.querySelector("#pause-run").textContent="Ⅱ PAUSE";root.querySelector("#phase-label").textContent="STANDBY";activeScenario=null;logs.replaceChildren();status.textContent="IDLE";root.querySelector("#stream-state").textContent="AWAITING INPUT";root.querySelector("#scenario-title").innerHTML="Awaiting <em>input</em>";root.querySelector("#scenario-subtitle").textContent="Describe any fictional system, mission, experiment or environment.";root.querySelector("#sim-id").textContent="NO SESSION";root.querySelector("#world-label").textContent="NO WORLD LOADED";root.querySelector("#core-state").textContent="CORE ONLINE";root.querySelector("#nodes").textContent="No active processes";root.querySelector("#metric-progress").textContent="0%";root.querySelector("#metric-throughput").textContent="0 ops";root.querySelector("#metric-events").textContent="0";root.querySelector("#progress-fill").style.width="0%";});
 }
