@@ -23,6 +23,7 @@ export function createRuntime({onUpdate=()=>{},onEvent=()=>{},onComplete=()=>{}}
   step(){engine.pause();engine.step();state.status=engine.status==="completed"?"completed":"paused";onUpdate(snapshot());return snapshot();},
   stop(){engine.stop();state.status="stopped";onUpdate(snapshot());return snapshot();},
   setSpeed(value){state.speed=engine.setSpeed(value);onUpdate(snapshot());return state.speed;},
+  setParameter(name,value){const s=state.currentScenario;if(!s||!["intensity","resilience"].includes(name))return false;const v=Math.max(0,Math.min(100,Number(value)||0));s.parameters[name]=v;const remaining=s.events.slice(state.eventCount);remaining.forEach((event,i)=>{const base=event._baseStability??event.stability;event._baseStability=base;const stress=(s.parameters.intensity-50)*.16;const support=(s.parameters.resilience-70)*.12;event.stability=Math.max(35,Math.min(100,Math.round(base-stress+support)));event.throughput=Math.max(10,Math.min(300,Math.round((event._baseThroughput??event.throughput)*(1+(s.parameters.intensity-50)*.003))));event._baseThroughput=event._baseThroughput??event.throughput;});onUpdate(snapshot());return true;},
   reset(){engine.stop();state.status="idle";state.currentScenario=null;state.progress=0;state.eventCount=0;onUpdate(snapshot());}
  };
 }
