@@ -22,7 +22,7 @@ export default { async fetch(request,env) {
  const controller=new AbortController();
  const timeout=setTimeout(()=>controller.abort(),UPSTREAM_TIMEOUT_MS);
  try {
-  const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",responseSchema:SCHEMA,temperature:0.45,maxOutputTokens:1200}},signal:controller.signal});
+  const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",responseSchema:SCHEMA,temperature:0.45,maxOutputTokens:1200}}),signal:controller.signal});
   const result=await upstream.json().catch(()=>({}));
   if(!upstream.ok)return reply({error:String(result.error?.message||"Gemini request failed.").slice(0,240)},upstream.status===429?429:502);
   const raw=result.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("");
