@@ -14,6 +14,21 @@
 <body>
   <div class="ambient-grid"></div>
   <main id="app" class="app-shell"><div class="boot">INITIALIZING KITSUNE CORE…</div></main>
+  <script>
+    // Surface startup failures on-screen instead of leaving the boot message frozen.
+    window.addEventListener("error", function (event) {
+      var app = document.getElementById("app");
+      if (!app || !app.querySelector(".boot")) return;
+      app.innerHTML = '<div style="margin:40px auto;padding:24px;max-width:680px;border:1px solid #8d5656;background:#170f12;color:#ffd5d5;font:13px/1.7 monospace"><b>KITSUNE STARTUP ERROR</b><p id="startup-error"></p><p style="color:#bdaaaa">Refresh after the fix is deployed. If this continues, send this message to the developer.</p></div>';
+      document.getElementById("startup-error").textContent = event.message || "A JavaScript file could not be loaded.";
+    });
+    window.addEventListener("unhandledrejection", function (event) {
+      var app = document.getElementById("app");
+      if (!app || !app.querySelector(".boot")) return;
+      app.innerHTML = '<div style="margin:40px auto;padding:24px;max-width:680px;border:1px solid #8d5656;background:#170f12;color:#ffd5d5;font:13px/1.7 monospace"><b>KITSUNE STARTUP ERROR</b><p id="startup-error"></p></div>';
+      document.getElementById("startup-error").textContent = String(event.reason || "Module startup failed.");
+    });
+  </script>
   <script type="module" src="./src/interface/dashboard.js"></script>
 </body>
 </html>
