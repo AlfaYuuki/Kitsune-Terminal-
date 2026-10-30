@@ -1,5 +1,5 @@
 const ALLOWED_ORIGIN = "https://alfayuuki.github.io";
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-flash-latest";
 const SCHEMA = { type:"OBJECT", properties:{
  title:{type:"STRING"}, domain:{type:"STRING"}, environment:{type:"STRING"}, summary:{type:"STRING"},
  subsystems:{type:"ARRAY",items:{type:"STRING"}}, phases:{type:"ARRAY",items:{type:"STRING"}},
