@@ -81,3 +81,16 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opac
  .command-main[data-view="telemetry"] .logs{height:230px}
  .command-main[data-view="telemetry"] .signal-panel canvas{height:160px}
 }
+
+/* Dual-engine model comparison */
+.ai-comparison{margin:12px 0;border:1px solid #53e6c144;background:linear-gradient(145deg,#0a171b,#080e12)}
+.ai-comparison[hidden]{display:none}
+.ai-columns{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.ai-columns article{min-width:0;padding:16px;border-right:1px solid var(--line)}
+.ai-columns article:last-child{border-right:0;background:#53e6c106}
+.ai-model-label{font-size:7px;letter-spacing:.15em;color:var(--mint);margin:8px 0}
+.ai-columns h3{font:600 17px var(--sans);margin:6px 0;color:#dcebe5}
+.ai-columns p{font:9px/1.7 var(--mono);color:#8ca69e;overflow-wrap:anywhere}
+.ai-columns ul{margin:5px 0 14px;padding-left:17px;color:#b6cbc3;font:8px/1.9 var(--mono)}
+.ai-columns li{padding-left:2px;overflow-wrap:anywhere}
+@media(max-width:600px){.ai-columns{grid-template-columns:1fr}.ai-columns article{border-right:0;border-bottom:1px solid var(--line)}.ai-columns h3{font-size:15px}}
