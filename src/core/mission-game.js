@@ -37,7 +37,7 @@ export function initializeMissionGame(root,command,onExit=()=>{}) {
       <aside class="mission-side"><article class="mission-panel"><div class="mission-panel-title">02 / VIRTUAL NODE MAP</div><div class="mission-nodes" id="mg-nodes"></div><p class="mission-note">Synthetic addresses from documentation-only IP ranges.</p></article><article class="mission-panel mission-stats"><div class="mission-panel-title">03 / OPERATOR PROFILE</div><div><small>CREDITS</small><b id="mg-credits">0 KC</b></div><div><small>MISSIONS CLEARED</small><b id="mg-cleared">0</b></div><div><small>REPUTATION</small><b id="mg-rep">0 RP</b></div></article><article class="mission-panel mission-objective"><div class="mission-panel-title">04 / OBJECTIVE</div><p id="mg-objective">Awaiting mission start…</p><button type="button" id="mg-exit">RETURN TO SIMULATOR ↗</button></article></aside>
     </div>
     <div class="mission-command-hint">GAME COMMANDS: <code>/missions</code> · <code>/profile</code> · <code>/help</code> · <code>/exit</code></div>`;
-  root.querySelector(".command-main")?.append(shell);
+  const main=root.querySelector(".command-main");main?.classList.add("mission-mode");main?.append(shell);
   const q=id=>shell.querySelector("#"+id);
   const storeKey="kitsune-rpg-profile-v2";
   let profile={credits:0,cleared:0,rep:0,missions:[]};
@@ -79,7 +79,7 @@ export function initializeMissionGame(root,command,onExit=()=>{}) {
     q("mg-rank").textContent=profile.rep>=1000?"VETERAN":profile.rep>=400?"SPECIALIST":"ROOKIE";q("mg-xp").textContent=profile.rep+" XP";
     log("SUCCESS","Mission complete · "+mission.reward+" KC reward processed to local profile.");
   };
-  q("mg-exit").addEventListener("click",()=>{if(timer)clearTimeout(timer);shell.remove();onExit()});
+  q("mg-exit").addEventListener("click",()=>{if(timer)clearTimeout(timer);shell.remove();main?.classList.remove("mission-mode");onExit()});
   q("mg-state").textContent="RUNNING";
   q("mg-objective").textContent=mission.brief;
   log("SYSTEM","KITSUNE game runtime 2.0 initialized · all events are simulated.");
