@@ -97,3 +97,9 @@ export function getMissionHelp(){
   "/exit         — return to simulator"
  ];
 }
+
+export function getMissionProfile(){
+ let profile={credits:0,cleared:0,rep:0,missions:[]};
+ try{profile={...profile,...JSON.parse(localStorage.getItem("kitsune-rpg-profile-v2")||"{}")}}catch{}
+ return "OPERATOR PROFILE · "+(profile.credits||0)+" KC · "+(profile.cleared||0)+" MISSIONS · "+(profile.rep||0)+" RP · "+((profile.missions||[]).join(", ")||"NO CLEARS YET");
+}
