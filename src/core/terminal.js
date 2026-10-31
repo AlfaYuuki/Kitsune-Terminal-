@@ -1,4 +1,5 @@
 import { parseRequest } from "./parser.js";
+import { initializeMissionGame, getMissionHelp } from "./mission-game.js";
 import { createRuntime } from "./runtime.js";
 import { updateHUD } from "../visual/hud.js";
 import { renderNetwork } from "../visual/network.js";
@@ -30,7 +31,7 @@ export function initializeTerminal() {
   </main>
  </div>
  <form id="prompt-form" class="command-input"><div class="input-prefix"><span class="live-dot"></span> <b>SIM</b> <span>›</span></div><input id="prompt" maxlength="420" autocomplete="off" placeholder="Describe a scenario… e.g. Simulate a lunar base during a solar storm" required><button type="submit"><span>EXECUTE</span><b>↗</b></button></form>
- <div class="command-shortcuts"><span>QUICK SCENARIOS</span><button type="button" data-prompt="Simulate a lunar research base during a solar storm">LUNAR BASE</button><button type="button" data-prompt="Model a smart city at night with autonomous transport">SMART CITY</button><button type="button" data-prompt="Run a defensive cyber security exercise in an isolated fictional sandbox">CYBER DEFENSE</button><button type="button" data-prompt="Simulate a deep ocean research vessel exploring an unknown trench">DEEP OCEAN</button></div>`;
+ <div class="command-shortcuts"><span>QUICK SCENARIOS</span><button type="button" data-prompt="Simulate a lunar research base during a solar storm">LUNAR BASE</button><button type="button" data-prompt="Model a smart city at night with autonomous transport">SMART CITY</button><button type="button" data-prompt="Run a defensive cyber security exercise in an isolated fictional sandbox">CYBER DEFENSE</button><button type="button" data-prompt="Simulate a deep ocean research vessel exploring an unknown trench">DEEP OCEAN</button><button type="button" data-prompt="/hijack.kfz">GHOST ARCHIVE</button><button type="button" data-prompt="/defend.kfz">NIGHT WATCH</button></div>`;
  const form=root.querySelector("#prompt-form"),input=root.querySelector("#prompt"),logs=root.querySelector("#logs"),status=root.querySelector("#run-status");
  const main=root.querySelector(".command-main");
  root.querySelectorAll("[data-view]").forEach(tab=>tab.addEventListener("click",()=>{const view=tab.dataset.view;main.dataset.view=view;root.querySelectorAll("[data-view]").forEach(item=>{const active=item===tab;item.classList.toggle("active",item.dataset.view===view);item.setAttribute("aria-current",active?"page":"false")});if(activeScenario){if(view==="world")renderWorld(root.querySelector("#world-canvas"),activeScenario);if(view==="telemetry")renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,runtime.getState().progress)}}));
@@ -78,6 +79,16 @@ export function initializeTerminal() {
   line.append(stamp,level,message);logs.append(line);logs.scrollTop=logs.scrollHeight;
  }
  function execute(prompt){
+  const rawCommand=String(prompt||"").trim().toLowerCase();
+  if(rawCommand.startsWith("/")){
+   const [command]=rawCommand.split(/\\s+/);root.querySelector("#mission-game")?.remove();
+   if(command==="/exit"){root.querySelector("#clear-session").click();return;}
+   if(command==="/help"||command==="/missions"||command==="/profile"){
+    appendLog({level:"SYSTEM",message:command==="/profile"?"Operator profile is stored locally in this browser.":getMissionHelp().join(" | ")});return;
+   }
+   if(initializeMissionGame(root,command,()=>{root.querySelector("#core-state").textContent="CORE ONLINE"})){root.querySelector("#core-state").textContent="GAME MODE";root.querySelector("#scenario-title").innerHTML="Mission <em>active</em>";root.querySelector("#scenario-subtitle").textContent="Fictional cyber RPG · local sandbox events only";return;}
+   appendLog({level:"ERROR",message:"Unknown game command. Type /help for available commands."});return;
+  }
   try{
    const request=parseRequest(prompt);const sequence=++requestSequence;logs.replaceChildren();status.textContent="INITIALIZING";root.querySelector("#stream-state").textContent="BUILDING MODEL";
    const scenario=runtime.run(request);activeScenario=scenario;
@@ -113,5 +124,5 @@ export function initializeTerminal() {
  root.querySelector("#run-speed").addEventListener("change",event=>runtime.setSpeed(event.target.value));
  root.querySelector("#intensity").addEventListener("input",event=>{const value=Number(event.target.value);root.querySelector("#intensity-value").textContent=value;runtime.setParameter("intensity",value)});
  root.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListener("click",()=>{input.value=button.dataset.prompt;execute(input.value)}));
- root.querySelector("#clear-session").addEventListener("click",()=>{requestSequence++;runtime.reset();root.querySelector("#ai-comparison").hidden=true;root.querySelector("#ai-state").textContent="AI MODEL PENDING";root.querySelector("#pause-run").textContent="Ⅱ PAUSE";root.querySelector("#phase-label").textContent="STANDBY";activeScenario=null;logs.replaceChildren();status.textContent="IDLE";root.querySelector("#stream-state").textContent="AWAITING INPUT";root.querySelector("#scenario-title").innerHTML="Awaiting <em>input</em>";root.querySelector("#scenario-subtitle").textContent="Describe any fictional system, mission, experiment or environment.";root.querySelector("#sim-id").textContent="NO SESSION";root.querySelector("#world-label").textContent="NO WORLD LOADED";root.querySelector("#core-state").textContent="CORE ONLINE";root.querySelector("#nodes").textContent="No active processes";root.querySelector("#metric-progress").textContent="0%";root.querySelector("#metric-throughput").textContent="0 ops";root.querySelector("#metric-events").textContent="0";root.querySelector("#progress-fill").style.width="0%";});
+ root.querySelector("#clear-session").addEventListener("click",()=>{requestSequence++;runtime.reset();root.querySelector("#mission-game")?.remove();root.querySelector("#ai-comparison").hidden=true;root.querySelector("#ai-state").textContent="AI MODEL PENDING";root.querySelector("#pause-run").textContent="Ⅱ PAUSE";root.querySelector("#phase-label").textContent="STANDBY";activeScenario=null;logs.replaceChildren();status.textContent="IDLE";root.querySelector("#stream-state").textContent="AWAITING INPUT";root.querySelector("#scenario-title").innerHTML="Awaiting <em>input</em>";root.querySelector("#scenario-subtitle").textContent="Describe any fictional system, mission, experiment or environment.";root.querySelector("#sim-id").textContent="NO SESSION";root.querySelector("#world-label").textContent="NO WORLD LOADED";root.querySelector("#core-state").textContent="CORE ONLINE";root.querySelector("#nodes").textContent="No active processes";root.querySelector("#metric-progress").textContent="0%";root.querySelector("#metric-throughput").textContent="0 ops";root.querySelector("#metric-events").textContent="0";root.querySelector("#progress-fill").style.width="0%";});
 }
