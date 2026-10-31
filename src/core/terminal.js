@@ -64,7 +64,7 @@ export function initializeTerminal() {
   try{localStorage.setItem("kitsune-ai-mode",aiMode)}catch{}
   renderAIStatus();
   if(aiMode!=="off")refreshAIStatus();
- });
+ }));
  window.addEventListener("online",refreshAIStatus);
  window.addEventListener("offline",()=>{gatewayReachable=false;renderAIStatus()});
  refreshAIStatus();
