@@ -162,3 +162,14 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opac
 
 .command-main.mission-mode>.command-heading,.command-main.mission-mode>.world-stage,.command-main.mission-mode>.runtime-controls,.command-main.mission-mode>.instrument-grid,.command-main.mission-mode>.ai-comparison,.command-main.mission-mode>.command-disclaimer{display:none!important}
 .command-main.mission-mode{padding-top:12px}
+
+/* 2.0 quick-launch polish */
+.command-shortcuts{scrollbar-width:thin;scrollbar-color:#28594d transparent}
+.command-shortcuts button{cursor:pointer;border:1px solid transparent;border-radius:2px;transition:color .16s,border-color .16s,background .16s}
+.command-shortcuts button:hover,.command-shortcuts button:focus-visible{color:var(--mint);border-color:#53e6c155;background:#53e6c10d;outline:none}
+.command-shortcuts button[data-prompt="/hijack.kfz"],.command-shortcuts button[data-prompt="/recover.kfz"],.command-shortcuts button[data-prompt="/defend.kfz"]{color:#d3b27f}
+.command-shortcuts button[data-prompt="/hijack.kfz"]:hover,.command-shortcuts button[data-prompt="/recover.kfz"]:hover,.command-shortcuts button[data-prompt="/defend.kfz"]:hover{color:#ffe0a8;border-color:#e8b36e66;background:#e8b36e0d}
+.command-input button,.control-buttons button,.mission-objective button{cursor:pointer}
+.command-input button:focus-visible,.control-buttons button:focus-visible,.mission-objective button:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+@media(max-width:760px){.command-shortcuts{padding-bottom:2px}.command-shortcuts button{flex:0 0 auto}.command-rail{scrollbar-width:none}.command-rail::-webkit-scrollbar,.command-shortcuts::-webkit-scrollbar{display:none}}
+@media(prefers-reduced-motion:reduce){.command-shortcuts button{transition:none}}
