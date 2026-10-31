@@ -18,7 +18,8 @@ export default { async fetch(request,env) {
  const prompt=typeof body.prompt==="string"?body.prompt.trim():"";
  if(!prompt||prompt.length>420)return reply({error:"Prompt must contain 1–420 characters."},400);
  const local=body.localModel&&typeof body.localModel==="object"?body.localModel:{};
- const instruction="You are the independent AI model designer inside KITSUNE TERMINAL. Design a fictional educational simulation blueprint only. Never provide real-world intrusion, targeting, access, control, or operation instructions. Do not use tools or access external systems. Return JSON matching the schema. Domain must be cyber, aerospace, engineering, science, environment, city, or general. Cyber must be defensive and isolated. Limit arrays to 8 subsystems, 8 phases, 6 assumptions, 6 risks. State uncertainty honestly. const startedAt=Date.now();
+ const instruction="You are the independent AI model designer inside KITSUNE TERMINAL. Design a fictional educational simulation blueprint only. Never provide real-world intrusion, targeting, access, control, or operation instructions. Do not use tools or access external systems. Return JSON matching the schema. Domain must be cyber, aerospace, engineering, science, environment, city, or general. Cyber must be defensive and isolated. Limit arrays to 8 subsystems, 8 phases, 6 assumptions, 6 risks. State uncertainty honestly.\nSCENARIO: "+prompt+"\nLOCAL ENGINE MODEL: "+JSON.stringify(local);
+ const startedAt=Date.now();
  let lastFailure=null;
  for(let modelIndex=0;modelIndex<MODEL_POOL.length;modelIndex++){
   const model=MODEL_POOL[modelIndex];
@@ -57,6 +58,5 @@ export default { async fetch(request,env) {
    if(modelIndex===MODEL_POOL.length-1)break;
   }finally{clearTimeout(timeout)}
  }
- return reply({error:"All configured Gemini models are currently unavailable. The local procedural engine remains available.",attemptedModels:MODEL_POOL,lastFailure:lastFailure?.message||"Unknown upstream failure.",elapsedMs:Date.now()-startedAt},lastFailure?.status===429?429:503);mains available.",model:MODEL},502);
- }finally{clearTimeout(timeout)}
+ return reply({error:"All configured Gemini models are currently unavailable. The local procedural engine remains available.",attemptedModels:MODEL_POOL,lastFailure:lastFailure?.message||"Unknown upstream failure.",elapsedMs:Date.now()-startedAt},lastFailure?.status===429?429:503);
 }};
