@@ -81,7 +81,7 @@ export function initializeTerminal() {
  function execute(prompt){
   const rawCommand=String(prompt||"").trim().toLowerCase();
   if(rawCommand.startsWith("/")){
-   const [command]=rawCommand.split(/\\s+/);root.querySelector("#mission-game")?.remove();
+   const [command]=rawCommand.split(/\s+/);root.querySelector("#mission-game")?.remove();
    if(command==="/exit"){root.querySelector("#clear-session").click();return;}
    if(command==="/help"||command==="/missions"||command==="/profile"){
     appendLog({level:"SYSTEM",message:command==="/profile"?getMissionProfile():getMissionHelp().join(" | ")});return;
