@@ -56,3 +56,23 @@ The gateway uses Gemini's `generateContent` endpoint and requests JSON output. S
 Add a domain profile to the procedural generator and its vocabulary to the parser. Keep scenario data in the normalized shape returned by `generateScenario`: domain, environment, nodes, edges, events, samples, metrics, parameters, and model metadata.
 
 The procedural engine is deterministic for the same normalized prompt seed, apart from its generated creation timestamp. Its outputs are illustrative simulations, not validated engineering, scientific, medical, financial, or operational predictions.
+
+
+## KITSUNE TERMINAL 2.0 — Game Mode
+
+Version 2.0 adds a separate command-driven fictional cyber RPG alongside the natural-language simulation engine. Both modes share the terminal input but use different renderers and execution flows.
+
+### Game commands
+
+- `/hijack.kfz` — Ghost Archive story mission.
+- `/recover.kfz` — Lost Signal restoration mission.
+- `/defend.kfz` — Night Watch defensive challenge.
+- `/missions` or `/help` — list available game commands.
+- `/profile` — view local credits, cleared missions, and reputation.
+- `/exit` — return to the simulation workspace.
+
+Missions use scripted fictional events and synthetic addresses from documentation-only IP ranges. Progression is stored locally in the browser. Replaying a cleared mission does not award duplicate credits.
+
+Natural-language requests continue to use the engineering/science/world simulation engine. For example, `Model a bridge engineering stress test` opens the bridge-specific animated visualization rather than the cyber RPG.
+
+The cyber game is an abstract narrative/puzzle simulation only. It does not scan, connect to, or operate real networks, devices, organizations, or accounts.
