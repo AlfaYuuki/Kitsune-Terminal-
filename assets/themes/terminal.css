@@ -94,3 +94,53 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opac
 .ai-columns ul{margin:5px 0 14px;padding-left:17px;color:#b6cbc3;font:8px/1.9 var(--mono)}
 .ai-columns li{padding-left:2px;overflow-wrap:anywhere}
 @media(max-width:600px){.ai-columns{grid-template-columns:1fr}.ai-columns article{border-right:0;border-bottom:1px solid var(--line)}.ai-columns h3{font-size:15px}}
+
+
+/* AI adapter mode control — match the dark Kitsune terminal palette. */
+.ai-mode-control{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:8px;
+ margin:14px 0 4px;
+ padding:9px 8px;
+ border:1px solid #24483f;
+ background:#091519;
+ color:#7faaa0;
+ font:8px var(--mono);
+ letter-spacing:.12em;
+}
+.ai-mode-control select{
+ appearance:none;
+ -webkit-appearance:none;
+ min-width:82px;
+ padding:7px 24px 7px 9px;
+ border:1px solid #397568;
+ border-radius:2px;
+ outline:none;
+ background:#0b201f;
+ color:#67e6c5;
+ color-scheme:dark;
+ font:9px var(--mono);
+ letter-spacing:.12em;
+ cursor:pointer;
+ background-image:linear-gradient(45deg,transparent 50%,#67e6c5 50%),linear-gradient(135deg,#67e6c5 50%,transparent 50%);
+ background-position:calc(100% - 12px) 50%,calc(100% - 8px) 50%;
+ background-size:4px 4px,4px 4px;
+ background-repeat:no-repeat;
+}
+.ai-mode-control select:hover,.ai-mode-control select:focus{
+ border-color:#67e6c5;
+ box-shadow:0 0 0 2px #67e6c51c;
+}
+.ai-mode-control select option{
+ background:#0b171b;
+ color:#d7eee7;
+}
+.ai-connection-state{
+ display:block;
+ padding:0 8px;
+ color:#58766e;
+ font:7px/1.6 var(--mono);
+ letter-spacing:.08em;
+}
