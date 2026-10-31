@@ -1,5 +1,5 @@
 import { parseRequest } from "./parser.js";
-import { initializeMissionGame, getMissionHelp } from "./mission-game.js";
+import { initializeMissionGame, getMissionHelp, getMissionProfile } from "./mission-game.js";
 import { createRuntime } from "./runtime.js";
 import { updateHUD } from "../visual/hud.js";
 import { renderNetwork } from "../visual/network.js";
@@ -84,7 +84,7 @@ export function initializeTerminal() {
    const [command]=rawCommand.split(/\\s+/);root.querySelector("#mission-game")?.remove();
    if(command==="/exit"){root.querySelector("#clear-session").click();return;}
    if(command==="/help"||command==="/missions"||command==="/profile"){
-    appendLog({level:"SYSTEM",message:command==="/profile"?"Operator profile is stored locally in this browser.":getMissionHelp().join(" | ")});return;
+    appendLog({level:"SYSTEM",message:command==="/profile"?getMissionProfile():getMissionHelp().join(" | ")});return;
    }
    if(initializeMissionGame(root,command,()=>{root.querySelector("#core-state").textContent="CORE ONLINE"})){root.querySelector("#core-state").textContent="GAME MODE";root.querySelector("#scenario-title").innerHTML="Mission <em>active</em>";root.querySelector("#scenario-subtitle").textContent="Fictional cyber RPG · local sandbox events only";return;}
    appendLog({level:"ERROR",message:"Unknown game command. Type /help for available commands."});return;
