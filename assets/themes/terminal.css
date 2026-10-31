@@ -159,3 +159,6 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opac
 .mission-objective p{padding:10px 12px;color:#a6c6b8;font-size:8px;line-height:1.8}.mission-objective button{margin:0 12px 12px;width:calc(100% - 24px);padding:10px;background:#123d32;border:1px solid #3e9a78;color:#8fffd0;font:8px var(--mono);letter-spacing:.1em;cursor:pointer}.mission-command-hint{padding:0 14px 14px;color:#63887b;font-size:8px;letter-spacing:.08em}.mission-command-hint code{color:#a5f3d0}
 @media(max-width:720px){.mission-grid{grid-template-columns:1fr;padding:8px}.mission-head{padding:14px}.mission-logs{height:210px}.mission-head h2{font-size:19px}.mission-rank{min-width:84px;padding:8px}.mission-node{grid-template-columns:48px 1fr}}
 @media(prefers-reduced-motion:reduce){.mission-track i{transition:none}}
+
+.command-main.mission-mode>.command-heading,.command-main.mission-mode>.world-stage,.command-main.mission-mode>.runtime-controls,.command-main.mission-mode>.instrument-grid,.command-main.mission-mode>.ai-comparison,.command-main.mission-mode>.command-disclaimer{display:none!important}
+.command-main.mission-mode{padding-top:12px}
