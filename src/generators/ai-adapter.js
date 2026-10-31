@@ -16,6 +16,22 @@ function validateBlueprint(data) {
   if (!clean.subsystems.length || !clean.phases.length) throw new Error("AI blueprint is missing required model details.");
   return clean;
 }
+export async function checkAIGateway(timeoutMs = 4000) {
+  if (!isAIConfigured() || !navigator.onLine) return false;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    // GET /generate intentionally returns 405; that still confirms the gateway is reachable.
+    const response = await fetch(AI_GATEWAY_URL.replace(/\/$/, "") + "/generate", {
+      method: "GET", mode: "cors", cache: "no-store", signal: controller.signal
+    });
+    return response.status === 405;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 export function isAIConfigured() {
   return Boolean(AI_GATEWAY_URL && /^https:\/\//i.test(AI_GATEWAY_URL));
 }
