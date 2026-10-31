@@ -13,7 +13,7 @@ export function initializeTerminal() {
  <header class="command-top"><a class="command-brand" href="#"><span class="brand-glyph">狐</span><span>KITSUNE <i>TERMINAL</i></span></a><div class="command-session"><span class="live-dot"></span><span id="core-state">CORE ONLINE</span><b>LOCAL / SANDBOX</b></div><button id="clear-session" class="icon-command" type="button" aria-label="Clear session">↺</button></header>
  <div class="command-layout">
   <aside class="command-rail"><div class="rail-label">SESSION</div><button class="rail-item active" type="button" data-view="live"><span>◈</span> LIVE SIM</button><button class="rail-item" type="button" data-view="world"><span>⌁</span> WORLD MODEL</button><button class="rail-item" type="button" data-view="telemetry"><span>▦</span> TELEMETRY</button><div class="rail-divider"></div><div class="rail-label">ENGINE</div><div class="engine-state"><span class="live-dot"></span> PROCEDURAL</div><div class="engine-state" id="ai-engine-state"><span class="live-dot muted-dot"></span> AI ADAPTER OFF</div>
-  <label class="ai-mode-control" for="ai-mode">AI ADAPTER <select id="ai-mode" aria-label="AI adapter mode"><option value="auto">AUTO</option><option value="on">ON</option><option value="off">OFF</option></select></label>
+  <div class="ai-mode-control" role="group" aria-label="AI adapter mode"><span class="ai-mode-title">AI ADAPTER</span><div class="ai-mode-buttons"><button type="button" data-ai-mode="auto" aria-pressed="true">AUTO</button><button type="button" data-ai-mode="on" aria-pressed="false">ON</button><button type="button" data-ai-mode="off" aria-pressed="false">OFF</button></div></div>
   <small id="ai-connection-state" class="ai-connection-state">CHECKING CONNECTION…</small><div class="rail-foot">KITSUNE CORE<br><b>BUILD 0.3.0</b><br><small>SIMULATED DATA ONLY</small></div></aside>
   <main class="command-main">
    <section class="command-heading"><div><div class="command-eyebrow">AUTONOMOUS SCENARIO ENGINE <span> / OFFLINE MODE</span></div><h1 id="scenario-title">Awaiting <em>input</em></h1><p id="scenario-subtitle">Describe any fictional system, mission, experiment or environment.</p></div><div class="session-badge"><span>SESSION</span><b id="sim-id">NO SESSION</b><small id="run-status">IDLE</small></div></section>
@@ -36,14 +36,15 @@ export function initializeTerminal() {
  root.querySelectorAll("[data-view]").forEach(tab=>tab.addEventListener("click",()=>{const view=tab.dataset.view;main.dataset.view=view;root.querySelectorAll("[data-view]").forEach(item=>{const active=item===tab;item.classList.toggle("active",item.dataset.view===view);item.setAttribute("aria-current",active?"page":"false")});if(activeScenario){if(view==="world")renderWorld(root.querySelector("#world-canvas"),activeScenario);if(view==="telemetry")renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,runtime.getState().progress)}}));
  let activeScenario=null;
  let requestSequence=0;
- const aiModeControl=root.querySelector("#ai-mode");
+ const aiModeButtons=[...root.querySelectorAll("[data-ai-mode]")];
  const aiConnectionState=root.querySelector("#ai-connection-state");
  const aiEngineState=root.querySelector("#ai-engine-state");
  const savedMode=(()=>{try{return localStorage.getItem("kitsune-ai-mode")||"auto"}catch{return "auto"}})();
  let aiMode=["auto","on","off"].includes(savedMode)?savedMode:"auto";
  let gatewayReachable=false;
  let checkingGateway=false;
- aiModeControl.value=aiMode;
+ function syncAIModeButtons(){aiModeButtons.forEach(button=>{const active=button.dataset.aiMode===aiMode;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))})}
+ syncAIModeButtons();
  function aiIsEnabled(){return aiMode!=="off" && navigator.onLine && gatewayReachable && isAIConfigured()}
  function renderAIStatus(){
   const enabled=aiIsEnabled();
@@ -57,8 +58,9 @@ export function initializeTerminal() {
   checkingGateway=false;
   renderAIStatus();
  }
- aiModeControl.addEventListener("change",()=>{
-  aiMode=aiModeControl.value;
+ aiModeButtons.forEach(button=>button.addEventListener("click",()=>{
+  aiMode=button.dataset.aiMode;
+  syncAIModeButtons();
   try{localStorage.setItem("kitsune-ai-mode",aiMode)}catch{}
   renderAIStatus();
   if(aiMode!=="off")refreshAIStatus();
