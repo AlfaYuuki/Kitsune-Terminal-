@@ -1,1 +1,1 @@
-export const defaultSettings = { theme: "adaptive", sound: false, aiEnabled: false, simulationInterval: 820 };
+export const defaultSettings = { theme: "adaptive", sound: false, aiEnabled: "auto", simulationInterval: 820 };
