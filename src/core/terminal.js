@@ -4,7 +4,7 @@ import { updateHUD } from "../visual/hud.js";
 import { renderNetwork } from "../visual/network.js";
 import { applyWorldTheme, renderWorld } from "../visual/world.js";
 import { renderMetrics } from "../visual/charts.js";
-import { generateWithAI, isAIConfigured } from "../generators/ai-adapter.js";
+import { generateWithAI, isAIConfigured, checkAIGateway } from "../generators/ai-adapter.js";
 
 export function initializeTerminal() {
  const root=document.querySelector("#app");if(!root)return;
@@ -12,7 +12,9 @@ export function initializeTerminal() {
  root.innerHTML=`
  <header class="command-top"><a class="command-brand" href="#"><span class="brand-glyph">狐</span><span>KITSUNE <i>TERMINAL</i></span></a><div class="command-session"><span class="live-dot"></span><span id="core-state">CORE ONLINE</span><b>LOCAL / SANDBOX</b></div><button id="clear-session" class="icon-command" type="button" aria-label="Clear session">↺</button></header>
  <div class="command-layout">
-  <aside class="command-rail"><div class="rail-label">SESSION</div><button class="rail-item active" type="button" data-view="live"><span>◈</span> LIVE SIM</button><button class="rail-item" type="button" data-view="world"><span>⌁</span> WORLD MODEL</button><button class="rail-item" type="button" data-view="telemetry"><span>▦</span> TELEMETRY</button><div class="rail-divider"></div><div class="rail-label">ENGINE</div><div class="engine-state"><span class="live-dot"></span> PROCEDURAL</div><div class="engine-state"><span class="live-dot muted-dot"></span> AI ADAPTER OFF</div><div class="rail-foot">KITSUNE CORE<br><b>BUILD 0.3.0</b><br><small>SIMULATED DATA ONLY</small></div></aside>
+  <aside class="command-rail"><div class="rail-label">SESSION</div><button class="rail-item active" type="button" data-view="live"><span>◈</span> LIVE SIM</button><button class="rail-item" type="button" data-view="world"><span>⌁</span> WORLD MODEL</button><button class="rail-item" type="button" data-view="telemetry"><span>▦</span> TELEMETRY</button><div class="rail-divider"></div><div class="rail-label">ENGINE</div><div class="engine-state"><span class="live-dot"></span> PROCEDURAL</div><div class="engine-state" id="ai-engine-state"><span class="live-dot muted-dot"></span> AI ADAPTER OFF</div>
+  <label class="ai-mode-control" for="ai-mode">AI ADAPTER <select id="ai-mode" aria-label="AI adapter mode"><option value="auto">AUTO</option><option value="on">ON</option><option value="off">OFF</option></select></label>
+  <small id="ai-connection-state" class="ai-connection-state">CHECKING CONNECTION…</small><div class="rail-foot">KITSUNE CORE<br><b>BUILD 0.3.0</b><br><small>SIMULATED DATA ONLY</small></div></aside>
   <main class="command-main">
    <section class="command-heading"><div><div class="command-eyebrow">AUTONOMOUS SCENARIO ENGINE <span> / OFFLINE MODE</span></div><h1 id="scenario-title">Awaiting <em>input</em></h1><p id="scenario-subtitle">Describe any fictional system, mission, experiment or environment.</p></div><div class="session-badge"><span>SESSION</span><b id="sim-id">NO SESSION</b><small id="run-status">IDLE</small></div></section>
    <section class="world-stage"><div class="stage-top"><span><i class="live-dot"></i> RENDERED ENVIRONMENT</span><span id="world-label">NO WORLD LOADED</span></div><canvas id="world-canvas" height="220"></canvas><div class="stage-overlay"><span>WORLD INSTANCE / 01</span><span>PROCEDURAL VISUALIZATION</span></div></section>
@@ -34,6 +36,37 @@ export function initializeTerminal() {
  root.querySelectorAll("[data-view]").forEach(tab=>tab.addEventListener("click",()=>{const view=tab.dataset.view;main.dataset.view=view;root.querySelectorAll("[data-view]").forEach(item=>{const active=item===tab;item.classList.toggle("active",item.dataset.view===view);item.setAttribute("aria-current",active?"page":"false")});if(activeScenario){if(view==="world")renderWorld(root.querySelector("#world-canvas"),activeScenario);if(view==="telemetry")renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,runtime.getState().progress)}}));
  let activeScenario=null;
  let requestSequence=0;
+ const aiModeControl=root.querySelector("#ai-mode");
+ const aiConnectionState=root.querySelector("#ai-connection-state");
+ const aiEngineState=root.querySelector("#ai-engine-state");
+ const savedMode=(()=>{try{return localStorage.getItem("kitsune-ai-mode")||"auto"}catch{return "auto"}})();
+ let aiMode=["auto","on","off"].includes(savedMode)?savedMode:"auto";
+ let gatewayReachable=false;
+ let checkingGateway=false;
+ aiModeControl.value=aiMode;
+ function aiIsEnabled(){return aiMode!=="off" && navigator.onLine && gatewayReachable && isAIConfigured()}
+ function renderAIStatus(){
+  const enabled=aiIsEnabled();
+  aiEngineState.innerHTML='<span class="live-dot '+(enabled?"":"muted-dot")+'"></span> AI ADAPTER '+(enabled?"READY":"OFF");
+  aiConnectionState.textContent=aiMode==="off"?"USER DISABLED":!navigator.onLine?"NO INTERNET CONNECTION":!isAIConfigured()?"GATEWAY NOT CONFIGURED":gatewayReachable?(aiMode==="auto"?"AUTO · GATEWAY ONLINE":"MANUAL ON · GATEWAY ONLINE"):"GATEWAY UNAVAILABLE";
+ }
+ async function refreshAIStatus(){
+  if(checkingGateway)return;
+  checkingGateway=true;
+  gatewayReachable=await checkAIGateway();
+  checkingGateway=false;
+  renderAIStatus();
+ }
+ aiModeControl.addEventListener("change",()=>{
+  aiMode=aiModeControl.value;
+  try{localStorage.setItem("kitsune-ai-mode",aiMode)}catch{}
+  renderAIStatus();
+  if(aiMode!=="off")refreshAIStatus();
+ });
+ window.addEventListener("online",refreshAIStatus);
+ window.addEventListener("offline",()=>{gatewayReachable=false;renderAIStatus()});
+ refreshAIStatus();
+ setInterval(refreshAIStatus,15000);
  const runtime=createRuntime({onUpdate:state=>{updateHUD(state,root);if(activeScenario)renderMetrics(root.querySelector("#metrics-canvas"),activeScenario,state.progress)},onEvent:event=>{appendLog(event);root.querySelector("#phase-label").textContent=event.phase||"RUNNING";if(activeScenario)renderNetwork(root.querySelector("#network-canvas"),activeScenario.nodes)},onComplete:()=>{status.textContent="COMPLETE";root.querySelector("#stream-state").textContent="SEQUENCE COMPLETE";appendLog({level:"SUCCESS",message:"Scenario sequence completed. Virtual environment remains isolated."})}});
  function appendLog(event){
   const line=document.createElement("div");line.className="log-line";
@@ -61,11 +94,11 @@ export function initializeTerminal() {
    fillList("local-model-nodes",scenario.nodes.map(n=>n.label));fillList("local-model-phases",scenario.phases);
    fillList("ai-model-nodes",["Awaiting AI blueprint"]);fillList("ai-model-phases",["Awaiting AI blueprint"]);fillList("ai-model-notes",[]);
    root.querySelector("#ai-model-title").textContent="Waiting for AI";root.querySelector("#ai-model-summary").textContent="Independent model generation pending.";
-   root.querySelector("#ai-state").textContent=isAIConfigured()?"GEMINI CONNECTING":"AI GATEWAY NOT CONFIGURED";
-   if(isAIConfigured()){
+   root.querySelector("#ai-state").textContent=aiIsEnabled()?"GEMINI CONNECTING":aiMode==="off"?"AI DISABLED BY USER":!navigator.onLine?"OFFLINE · LOCAL ENGINE":gatewayReachable?"AI READY":"GATEWAY UNAVAILABLE · LOCAL ENGINE";
+   if(aiIsEnabled()){
     root.querySelector("#core-state").textContent="DUAL ENGINE";
     generateWithAI(request).then(blueprint=>{if(sequence!==requestSequence)return;root.querySelector("#ai-model-title").textContent=blueprint.title+" · "+blueprint.domain.toUpperCase();root.querySelector("#ai-model-summary").textContent=blueprint.environment+" · "+blueprint.summary+" · confidence "+blueprint.confidence+"%";fillList("ai-model-nodes",blueprint.subsystems);fillList("ai-model-phases",blueprint.phases);fillList("ai-model-notes",[...blueprint.assumptions.map(x=>"ASSUMPTION · "+x),...blueprint.risks.map(x=>"RISK · "+x)]);root.querySelector("#ai-state").textContent="GEMINI MODEL RECEIVED";appendLog({level:"SUCCESS",message:"Independent Gemini model received. Local and AI blueprints are ready for comparison."})}).catch(error=>{if(sequence!==requestSequence)return;root.querySelector("#ai-state").textContent="LOCAL FALLBACK ACTIVE";root.querySelector("#ai-model-title").textContent="AI unavailable";root.querySelector("#ai-model-summary").textContent=error.message+" The procedural model continues normally.";appendLog({level:"WARN",message:"AI adapter unavailable · "+error.message+" · continuing with local procedural engine"})});
-   }else{root.querySelector("#ai-model-title").textContent="Gateway not configured";root.querySelector("#ai-model-summary").textContent="Deploy the secure Worker and set its public gateway URL in src/config/ai.js. The local engine is fully operational.";}
+   }else{root.querySelector("#ai-model-title").textContent=aiMode==="off"?"AI adapter is off":!navigator.onLine?"Internet connection unavailable":"AI gateway unavailable";root.querySelector("#ai-model-summary").textContent="The local procedural engine is running normally. Choose AUTO to reconnect automatically, ON to request remote AI when the gateway is reachable, or OFF to keep it disabled.";}
 
    appendLog({level:"TRACE",message:"Virtual instance "+scenario.id+" allocated in local sandbox"});
    appendLog({level:"INFO",message:"Environment: "+scenario.environment});
