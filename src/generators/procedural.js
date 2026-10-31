@@ -11,8 +11,30 @@ const profiles={
 const phases=["INITIALIZATION","MODEL CONSTRUCTION","STATE PROPAGATION","SYSTEM ANALYSIS","SCENARIO RESPONSE","VALIDATION","REPORT"];
 function rng(seed){let x=(seed>>>0)||1;return()=>{x=(x*1664525+1013904223)>>>0;return x/4294967296}}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+function selectProfile(request){
+ const words=(request.keywords||[]).join(" ").toLowerCase()+" "+(request.normalized||"");
+ if(request.domain==="engineering"&&(words.includes("bridge")||words.includes("overpass")||words.includes("viaduct")))return {
+  environment:"Cable-stayed bridge structural test environment",
+  systems:["DECK SPAN","MAIN PYLON","CABLE ARRAY","BEARING SET","LOAD SENSORS","STRUCTURE CORE"],
+  verbs:["Bridge geometry instantiated","Synthetic deck load distributed","Cable tension model evaluated","Pylon response calculated","Bearing displacement monitored","Structural margin reviewed"],
+  metrics:["deck load","deflection","stability"]
+ };
+ if(request.domain==="engineering"&&(words.includes("solar")||words.includes("panel")))return {
+  environment:"Solar energy test and storage facility",
+  systems:["PV ARRAY","SUN SENSOR","TRACKER DRIVE","CHARGE CTRL","BATTERY BANK","ENERGY CORE"],
+  verbs:["Solar input profile generated","Panel alignment simulated","Tracker response calculated","Charge cycle evaluated","Storage state updated","Energy yield compared"],
+  metrics:["irradiance","charge","yield"]
+ };
+ if(request.domain==="engineering"&&(words.includes("factory")||words.includes("industrial")||words.includes("plant")))return {
+  environment:"Industrial process simulation floor",
+  systems:["FEED LINE","ROBOT CELL","MOTOR BANK","QUALITY CTRL","POWER BUS","PLANT CORE"],
+  verbs:["Production flow initialized","Robot cell cycle modeled","Motor load sampled","Quality state evaluated","Power demand balanced","Process throughput compared"],
+  metrics:["throughput","power","quality"]
+ };
+ return profiles[request.domain]||profiles.general;
+}
 export function generateScenario(request){
- const profile=profiles[request.domain]||profiles.general,seed=[...request.normalized].reduce((n,c)=>((n*31)+c.charCodeAt(0))>>>0,2166136261),random=rng(seed);
+ const profile=selectProfile(request),seed=[...request.normalized].reduce((n,c)=>((n*31)+c.charCodeAt(0))>>>0,2166136261),random=rng(seed);
  const nodes=profile.systems.map((name,i)=>({id:"SYS-"+String(i+1).padStart(2,"0"),label:name,status:"standby",load:Math.round(18+random()*62),health:Math.round(84+random()*15),role:i===profile.systems.length-1?"coordinator":"subsystem"}));
  const count=24,events=[];
  let stability=91+random()*7,throughput=60+random()*80;
