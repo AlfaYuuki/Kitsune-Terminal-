@@ -1,6 +1,6 @@
 const ALLOWED_ORIGIN = "https://alfayuuki.github.io";
-const MODEL = "gemini-3.8-flash";
-const UPSTREAM_TIMEOUT_MS = 20000;
+const MODEL = "gemini-3.5-flash-lite";
+const UPSTREAM_TIMEOUT_MS = 25000;
 const SCHEMA = { type:"OBJECT", properties:{
  title:{type:"STRING"}, domain:{type:"STRING"}, environment:{type:"STRING"}, summary:{type:"STRING"},
  subsystems:{type:"ARRAY",items:{type:"STRING"}}, phases:{type:"ARRAY",items:{type:"STRING"}},
@@ -24,7 +24,7 @@ export default { async fetch(request,env) {
  const timeout=setTimeout(()=>controller.abort(),UPSTREAM_TIMEOUT_MS);
  try {
   const url="https://generativelanguage.googleapis.com/v1beta/models/"+MODEL+":generateContent";
-  const options={method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",responseSchema:SCHEMA,maxOutputTokens:1000}}),signal:controller.signal};
+  const options={method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",responseSchema:SCHEMA,maxOutputTokens:850}}),signal:controller.signal};
   let upstream, result={};
   for(let attempt=0;attempt<2;attempt++){
    upstream=await fetch(url,options);
@@ -46,7 +46,7 @@ export default { async fetch(request,env) {
  }catch(error){
   if(error?.name==="AbortError"){
    console.warn("Gemini upstream timed out",{model:MODEL,timeoutMs:UPSTREAM_TIMEOUT_MS,elapsedMs:Date.now()-startedAt});
-   return reply({error:"Gemini upstream timed out after 20 seconds. The local procedural engine remains available.",model:MODEL},504);
+   return reply({error:"Gemini upstream timed out after 25 seconds. The local procedural engine remains available.",model:MODEL},504);
   }
   console.error("Gemini gateway network failure",{message:String(error?.message||"network error").slice(0,160),model:MODEL});
   return reply({error:"Unable to reach Gemini. The local procedural engine remains available.",model:MODEL},502);
